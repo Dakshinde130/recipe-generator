@@ -42,3 +42,7 @@ Then open <http://localhost:8080> and enter some ingredients.
 
 - Keep your API key private. Do not paste it into the source or commit it.
 - If a key is ever exposed, rotate it in the Spoonacular dashboard.
+
+## License
+
+Released under the [MIT License](LICENSE).
