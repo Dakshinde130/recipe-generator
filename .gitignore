@@ -1,0 +1,39 @@
+# ===== Compiled Java =====
+*.class
+
+# ===== Maven build output =====
+target/
+
+# ===== Gradle build output (in case the build tool changes) =====
+.gradle/
+build/
+
+# ===== Secrets / local config =====
+# The Spoonacular key is read from the SPOONACULAR_API_KEY environment variable.
+# Never commit a real key. These files are ignored so local secrets can't leak:
+.env
+.env.*
+secrets.properties
+config.properties
+application-local.properties
+application-secret.properties
+application-secrets.properties
+
+# ===== IDE / editor =====
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.sts4-cache/
+.factorypath
+
+# ===== OS junk =====
+.DS_Store
+Thumbs.db
+
+# ===== Logs =====
+*.log

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c0a14" />
+  <title>FlavorFind · Ingredients In, Dinner Out</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       FlavorFind — Liquid Glass (iOS 26 inspired)
+       Single-file. No build step. Pure CSS + vanilla JS.
+       ============================================================ */
+
+    /* ----------  DESIGN TOKENS  ---------- */
+    :root {
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display",
+              "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+      /* accent — warm, edible */
+      --a1: #ff8a3d;   /* tangerine */
+      --a2: #ff4d6d;   /* guava     */
+      --a3: #ffd166;   /* saffron   */
+      --accent-grad: linear-gradient(135deg, var(--a3) 0%, var(--a1) 45%, var(--a2) 100%);
+
+      --spring: cubic-bezier(.22, 1, .36, 1);
+      --spring-soft: cubic-bezier(.34, 1.56, .64, 1);
+
+      --radius-xl: 34px;
+      --radius-lg: 26px;
+      --radius-md: 18px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 18px 50px -12px rgba(0,0,0,.45);
+      --shadow-deep: 0 40px 90px -30px rgba(0,0,0,.7);
+    }
+
+    /* DARK (default) */
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg-0: #08070d;
+      --bg-1: #0e0b18;
+      --ink: #f6f3ff;
+      --ink-soft: rgba(246,243,255,.66);
+      --ink-faint: rgba(246,243,255,.40);
+      --glass-bg: rgba(255,255,255,.07);
+      --glass-bg-strong: rgba(255,255,255,.11);
+      --glass-brd: rgba(255,255,255,.16);
+      --glass-hi: rgba(255,255,255,.55);
+      --chip-bg: rgba(255,255,255,.08);
+      --field-bg: rgba(255,255,255,.06);
+      --skel-1: rgba(255,255,255,.05);
+      --skel-2: rgba(255,255,255,.12);
+      --aurora-op: .85;
+    }
+
+    /* LIGHT */
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg-0: #fff4ea;
+      --bg-1: #ffe9ef;
+      --ink: #2a1c2b;
+      --ink-soft: rgba(42,28,43,.66);
+      --ink-faint: rgba(42,28,43,.42);
+      --glass-bg: rgba(255,255,255,.45);
+      --glass-bg-strong: rgba(255,255,255,.62);
+      --glass-brd: rgba(255,255,255,.7);
+      --glass-hi: rgba(255,255,255,.95);
+      --chip-bg: rgba(255,255,255,.6);
+      --field-bg: rgba(255,255,255,.55);
+      --skel-1: rgba(0,0,0,.05);
+      --skel-2: rgba(0,0,0,.1);
+      --aurora-op: .7;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: var(--font);
+      color: var(--ink);
+      background: var(--bg-0);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      transition: background .6s var(--spring), color .4s ease;
+    }
+
+    /* ----------  ANIMATED AURORA BACKGROUND  ---------- */
+    .bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; background: var(--bg-0); }
+    .bg::after { /* fine grain for premium depth */
+      content: ""; position: absolute; inset: 0; opacity: .035; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(70px);
+      opacity: var(--aurora-op); will-change: transform;
+      mix-blend-mode: screen;
+    }
+    html[data-theme="light"] .blob { mix-blend-mode: multiply; filter: blur(80px); }
+    .blob.b1 { width: 56vmax; height: 56vmax; left: -16vmax; top: -18vmax;
+      background: radial-gradient(circle at 30% 30%, var(--a1), transparent 60%);
+      animation: drift1 26s var(--spring) infinite alternate; }
+    .blob.b2 { width: 50vmax; height: 50vmax; right: -14vmax; top: -10vmax;
+      background: radial-gradient(circle at 50% 50%, var(--a2), transparent 60%);
+      animation: drift2 32s var(--spring) infinite alternate; }
+    .blob.b3 { width: 46vmax; height: 46vmax; left: 22vmax; bottom: -22vmax;
+      background: radial-gradient(circle at 50% 50%, var(--a3), transparent 62%);
+      animation: drift3 30s var(--spring) infinite alternate; }
+    .blob.b4 { width: 40vmax; height: 40vmax; right: -8vmax; bottom: -16vmax;
+      background: radial-gradient(circle at 50% 50%, #7c5cff, transparent 60%);
+      animation: drift1 38s var(--spring) infinite alternate-reverse; }
+
+    @keyframes drift1 { from{transform:translate3d(0,0,0) scale(1)} to{transform:translate3d(8vmax,6vmax,0) scale(1.15)} }
+    @keyframes drift2 { from{transform:translate3d(0,0,0) scale(1.05)} to{transform:translate3d(-7vmax,5vmax,0) scale(.92)} }
+    @keyframes drift3 { from{transform:translate3d(0,0,0) scale(.95)} to{transform:translate3d(6vmax,-7vmax,0) scale(1.18)} }
+
+    /* ----------  GLASS PRIMITIVE  ---------- */
+    .glass {
+      position: relative;
+      background: var(--glass-bg);
+      backdrop-filter: blur(26px) saturate(180%);
+      -webkit-backdrop-filter: blur(26px) saturate(180%);
+      border: 1px solid var(--glass-brd);
+      box-shadow: var(--shadow-soft), inset 0 1px 0 0 var(--glass-hi);
+    }
+    /* specular top sheen */
+    .glass::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 36%);
+      opacity: .6; mix-blend-mode: overlay;
+    }
+    /* pointer-reactive highlight (set via JS --mx/--my) */
+    .lume::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: radial-gradient(240px circle at var(--mx,50%) var(--my,0%),
+                  rgba(255,255,255,.22), transparent 60%);
+      opacity: 0; transition: opacity .4s ease;
+    }
+    .lume:hover::after { opacity: 1; }
+
+    /* ----------  LAYOUT  ---------- */
+    .wrap { max-width: 1180px; margin: 0 auto; padding: clamp(16px, 3vw, 34px); }
+
+    /* top bar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 12px 16px 12px 18px; border-radius: var(--radius-pill);
+      margin-bottom: clamp(28px, 6vh, 56px);
+      animation: dropIn .9s var(--spring) both;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand .mark {
+      width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center;
+      font-size: 22px; background: var(--accent-grad);
+      box-shadow: 0 8px 22px -6px var(--a1), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .brand .name { font-weight: 800; font-size: 19px; letter-spacing: -.02em; }
+    .brand .name b { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .iconbtn {
+      height: 42px; padding: 0 16px; border: 1px solid var(--glass-brd);
+      background: var(--chip-bg); color: var(--ink); border-radius: var(--radius-pill);
+      font: 600 14px/1 var(--font); cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      backdrop-filter: blur(12px); transition: transform .35s var(--spring-soft), background .3s ease, box-shadow .3s ease;
+    }
+    .iconbtn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(0,0,0,.6); }
+    .iconbtn:active { transform: translateY(0) scale(.96); }
+    .iconbtn .fav-count { color: var(--a2); font-weight: 800; }
+    .theme-toggle { width: 42px; padding: 0; justify-content: center; font-size: 17px; }
+
+    /* hero */
+    .hero { text-align: center; margin-bottom: clamp(26px, 5vh, 44px); }
+    .hero .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600;
+      color: var(--ink-soft); padding: 7px 14px; border-radius: var(--radius-pill);
+      background: var(--chip-bg); border: 1px solid var(--glass-brd); margin-bottom: 18px;
+      animation: dropIn .9s .05s var(--spring) both; backdrop-filter: blur(10px);
+    }
+    .hero .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #38d39f; box-shadow: 0 0 0 0 rgba(56,211,159,.6); animation: pulse 2.4s infinite; }
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 78px); line-height: .98; font-weight: 800; letter-spacing: -.035em;
+      animation: dropIn 1s .08s var(--spring) both;
+    }
+    .hero h1 .grad { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p { margin-top: 16px; font-size: clamp(15px, 2.2vw, 19px); color: var(--ink-soft); font-weight: 400;
+      animation: dropIn 1s .14s var(--spring) both; }
+
+    /* ----------  SEARCH PANEL  ---------- */
+    .panel {
+      max-width: 740px; margin: 0 auto clamp(34px, 7vh, 60px);
+      border-radius: var(--radius-xl); padding: 22px;
+      animation: riseIn 1s .18s var(--spring) both;
+    }
+    .field {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      background: var(--field-bg); border: 1px solid var(--glass-brd);
+      border-radius: var(--radius-lg); padding: 10px 12px; min-height: 60px;
+      transition: box-shadow .35s var(--spring), border-color .35s ease, background .3s ease;
+    }
+    .field.focus { border-color: transparent; box-shadow: 0 0 0 4px rgba(255,138,61,.28), 0 0 38px -6px rgba(255,77,109,.5); }
+    .field input {
+      flex: 1 1 160px; min-width: 130px; border: 0; outline: 0; background: transparent;
+      color: var(--ink); font: 500 16px/1.3 var(--font); padding: 8px 6px;
+    }
+    .field input::placeholder { color: var(--ink-faint); }
+
+    /* ingredient chips */
+    .chip {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 8px 8px 14px;
+      background: var(--accent-grad); color: #2a1300; border-radius: var(--radius-pill);
+      font-weight: 700; font-size: 13.5px; white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 16px -8px var(--a1);
+      animation: chipIn .45s var(--spring-soft) both;
+    }
+    .chip button {
+      width: 20px; height: 20px; border: 0; cursor: pointer; border-radius: 50%;
+      background: rgba(0,0,0,.18); color: #2a1300; font-size: 13px; line-height: 1;
+      display: grid; place-items: center; transition: transform .25s var(--spring-soft), background .2s;
+    }
+    .chip button:hover { background: rgba(0,0,0,.32); transform: rotate(90deg); }
+
+    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+    .cta {
+      flex: 1 1 200px; border: 0; cursor: pointer; color: #2a1300; font: 800 16.5px/1 var(--font);
+      padding: 17px 22px; border-radius: var(--radius-lg); background: var(--accent-grad);
+      box-shadow: 0 14px 30px -10px var(--a1), inset 0 1px 0 rgba(255,255,255,.6);
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      position: relative; overflow: hidden; letter-spacing: -.01em;
+      transition: transform .4s var(--spring-soft), box-shadow .4s var(--spring);
+    }
+    .cta:hover { transform: translateY(-3px); box-shadow: 0 22px 44px -12px var(--a1), inset 0 1px 0 rgba(255,255,255,.6); }
+    .cta:active { transform: translateY(-1px) scale(.985); }
+    .cta:disabled { filter: grayscale(.4) brightness(.9); cursor: default; transform: none; }
+    .cta .sheen { position: absolute; top: 0; left: -130%; width: 60%; height: 100%; transform: skewX(-20deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); }
+    .cta:hover .sheen { animation: sheen 1s var(--spring); }
+    .ghostbtn {
+      border: 1px solid var(--glass-brd); background: var(--chip-bg); color: var(--ink-soft);
+      font: 600 14px/1 var(--font); padding: 16px 18px; border-radius: var(--radius-lg); cursor: pointer;
+      transition: transform .35s var(--spring-soft), color .2s, background .2s;
+    }
+    .ghostbtn:hover { transform: translateY(-2px); color: var(--ink); }
+
+    /* suggestions */
+    .suggest { margin-top: 18px; }
+    .suggest .lbl { font-size: 12px; font-weight: 600; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+    .suggest .row { display: flex; flex-wrap: wrap; gap: 9px; }
+    .sg {
+      border: 1px solid var(--glass-brd); background: var(--chip-bg); color: var(--ink-soft);
+      padding: 8px 14px; border-radius: var(--radius-pill); font: 600 13px/1 var(--font); cursor: pointer;
+      transition: transform .3s var(--spring-soft), color .2s, background .25s, border-color .25s;
+    }
+    .sg:hover { transform: translateY(-2px); color: var(--ink); border-color: var(--a1); }
+    .sg:disabled { opacity: .35; cursor: default; transform: none; }
+
+    /* ----------  RESULTS  ---------- */
+    .results-head {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+      flex-wrap: wrap; margin: 6px 4px 22px;
+    }
+    .results-head h2 { font-size: clamp(20px, 3.4vw, 28px); font-weight: 800; letter-spacing: -.02em; }
+    .results-head h2 span { color: var(--ink-faint); font-weight: 600; }
+    .results-head .meta { color: var(--ink-soft); font-size: 14px; font-weight: 500; }
+
+    .grid {
+      display: grid; gap: clamp(16px, 2.4vw, 26px);
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+    }
+
+    .card {
+      border-radius: var(--radius-lg); overflow: hidden; cursor: default;
+      transform: translateY(0); will-change: transform;
+      transition: transform .5s var(--spring), box-shadow .5s var(--spring);
+      animation: cardIn .7s var(--spring) both;
+    }
+    .card:hover { transform: translateY(-12px); box-shadow: var(--shadow-deep), inset 0 1px 0 0 var(--glass-hi); }
+    .card .media { position: relative; aspect-ratio: 16/11; overflow: hidden; background: var(--skel-1); }
+    .card .media img { width: 100%; height: 100%; object-fit: cover; display: block;
+      transform: scale(1.02); transition: transform 1.1s var(--spring), filter .4s; }
+    .card:hover .media img { transform: scale(1.12); }
+    .card .media::after { content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)); opacity: .85; }
+    .card .badge {
+      position: absolute; left: 12px; top: 12px; z-index: 2; font-size: 11.5px; font-weight: 700;
+      padding: 6px 11px; border-radius: var(--radius-pill); color: #fff;
+      background: rgba(0,0,0,.34); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.22);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .heart {
+      position: absolute; right: 12px; top: 12px; z-index: 3; width: 40px; height: 40px; border: 0;
+      border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 18px;
+      background: rgba(0,0,0,.32); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.24);
+      color: #fff; transition: transform .35s var(--spring-soft), background .25s;
+    }
+    .heart:hover { transform: scale(1.12); background: rgba(0,0,0,.5); }
+    .heart:active { transform: scale(.86); }
+    .heart.on { color: var(--a2); }
+    .heart.on.pop { animation: pop .5s var(--spring-soft); }
+    .card .body { padding: 18px 18px 20px; }
+    .card .title { font-size: 17px; font-weight: 700; letter-spacing: -.015em; line-height: 1.28;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+    .card .actions { display: flex; gap: 10px; margin-top: 16px; }
+    .card .view {
+      flex: 1; text-align: center; text-decoration: none; padding: 12px 14px; border-radius: var(--radius-md);
+      font: 700 14px/1 var(--font); color: var(--ink); background: var(--glass-bg-strong);
+      border: 1px solid var(--glass-brd); transition: transform .35s var(--spring-soft), background .25s, color .25s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .card .view:hover { transform: translateY(-2px); background: var(--accent-grad); color: #2a1300; border-color: transparent; }
+    .card .web {
+      width: 46px; flex: 0 0 auto; border-radius: var(--radius-md); border: 1px solid var(--glass-brd);
+      background: var(--glass-bg-strong); color: var(--ink-soft); cursor: pointer; font-size: 16px;
+      display: grid; place-items: center; transition: transform .35s var(--spring-soft), color .2s;
+    }
+    .card .web:hover { transform: translateY(-2px); color: var(--ink); }
+
+    /* skeleton */
+    .skel { border-radius: var(--radius-lg); overflow: hidden; }
+    .skel .media { aspect-ratio: 16/11; }
+    .skel .ln { height: 14px; border-radius: 7px; margin: 14px 18px 0; }
+    .skel .ln.s { width: 60%; }
+    .skel .btn { height: 42px; border-radius: var(--radius-md); margin: 18px; }
+    .shimmer { background: linear-gradient(100deg, var(--skel-1) 30%, var(--skel-2) 50%, var(--skel-1) 70%);
+      background-size: 220% 100%; animation: shimmer 1.4s infinite linear; }
+
+    /* state cards (idle / empty / error) */
+    .state {
+      grid-column: 1 / -1; text-align: center; padding: clamp(40px, 8vh, 80px) 28px;
+      border-radius: var(--radius-xl); animation: riseIn .7s var(--spring) both;
+    }
+    .state .emoji { font-size: 52px; display: inline-block; animation: float 4s ease-in-out infinite; }
+    .state h3 { font-size: clamp(20px, 3vw, 26px); font-weight: 800; margin-top: 14px; letter-spacing: -.02em; }
+    .state p { color: var(--ink-soft); margin-top: 10px; font-size: 15px; max-width: 440px; margin-inline: auto; line-height: 1.6; }
+
+    .footer { text-align: center; color: var(--ink-faint); font-size: 13px; margin: 46px 0 8px; font-weight: 500; }
+    .footer b { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* ----------  KEYFRAMES  ---------- */
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(34px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes chipIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+    @keyframes shimmer { to { background-position: -220% 0; } }
+    @keyframes sheen { from { left: -130%; } to { left: 130%; } }
+    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(56,211,159,.55)} 70%{box-shadow:0 0 0 8px rgba(56,211,159,0)} 100%{box-shadow:0 0 0 0 rgba(56,211,159,0)} }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+    @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.4)} 100%{transform:scale(1)} }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .12s !important; }
+      .blob { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <span class="blob b1"></span><span class="blob b2"></span>
+    <span class="blob b3"></span><span class="blob b4"></span>
+  </div>
+
+  <div class="wrap">
+    <!-- TOP BAR -->
+    <nav class="topbar glass lume">
+      <div class="brand">
+        <div class="mark">🥘</div>
+        <div class="name">Flavor<b>Find</b></div>
+      </div>
+      <div class="top-actions">
+        <button class="iconbtn" id="favBtn" type="button" aria-label="View saved recipes">
+          <span aria-hidden="true">♥</span> Saved <span class="fav-count" id="favCount">0</span>
+        </button>
+        <button class="iconbtn theme-toggle" id="themeBtn" type="button" aria-label="Toggle colour theme">🌙</button>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <span class="eyebrow"><span class="dot"></span> Powered by your fridge</span>
+      <h1>What's for <span class="grad">dinner</span>?</h1>
+      <p>Drop in whatever you've got. FlavorFind turns spare ingredients into real recipes.</p>
+    </header>
+
+    <!-- SEARCH PANEL -->
+    <section class="panel glass lume" aria-label="Recipe search">
+      <div class="field" id="field">
+        <input id="ingredientInput" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Type an ingredient, then press Enter…" aria-label="Add an ingredient" />
+      </div>
+
+      <div class="controls">
+        <button class="cta" id="searchBtn" type="button">
+          <span class="sheen"></span>
+          <span aria-hidden="true">✨</span> Find Dinner
+        </button>
+        <button class="ghostbtn" id="clearBtn" type="button">Clear</button>
+      </div>
+
+      <div class="suggest">
+        <div class="lbl">Quick add</div>
+        <div class="row" id="suggestRow"></div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <div class="results-head" id="resultsHead" style="display:none">
+      <h2 id="resultsTitle"></h2>
+      <div class="meta" id="resultsMeta"></div>
+    </div>
+
+    <main class="grid" id="recipeGrid" aria-live="polite"></main>
+
+    <p class="footer">Crafted with liquid glass · <b>FlavorFind</b></p>
+  </div>
+
+  <script>
+    "use strict";
+
+    /* ----------  STATE  ---------- */
+    const SUGGESTIONS = ["tomato","garlic","pasta","chicken","onion","cheese","egg","spinach","rice","mushroom","potato","basil"];
+    let ingredients = [];
+    let view = "search";                 // "search" | "favorites"
+    let favorites = loadFavs();
+
+    /* ----------  ELEMENTS  ---------- */
+    const $ = (id) => document.getElementById(id);
+    const field      = $("field");
+    const input      = $("ingredientInput");
+    const grid       = $("recipeGrid");
+    const head       = $("resultsHead");
+    const headTitle  = $("resultsTitle");
+    const headMeta   = $("resultsMeta");
+    const favCountEl = $("favCount");
+    const favBtn     = $("favBtn");
+
+    /* ----------  THEME  ---------- */
+    (function initTheme() {
+      const saved = localStorage.getItem("flavorfind:theme");
+      const sys = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      setTheme(saved || sys);
+    })();
+    function setTheme(t) {
+      document.documentElement.setAttribute("data-theme", t);
+      $("themeBtn").textContent = t === "light" ? "☀️" : "🌙";
+      localStorage.setItem("flavorfind:theme", t);
+    }
+    $("themeBtn").addEventListener("click", () =>
+      setTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light"));
+
+    /* ----------  POINTER-REACTIVE GLASS  ---------- */
+    document.querySelectorAll(".lume").forEach((el) => {
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100) + "%");
+        el.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100) + "%");
+      });
+    });
+
+    /* ----------  INGREDIENT CHIPS  ---------- */
+    function renderChips() {
+      field.querySelectorAll(".chip").forEach((c) => c.remove());
+      ingredients.forEach((ing, i) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.innerHTML = `<span>${escapeHtml(ing)}</span>`;
+        const x = document.createElement("button");
+        x.type = "button";
+        x.setAttribute("aria-label", "Remove " + ing);
+        x.textContent = "✕";
+        x.addEventListener("click", () => { ingredients.splice(i, 1); renderChips(); syncSuggestions(); input.focus(); });
+        chip.appendChild(x);
+        field.insertBefore(chip, input);
+      });
+      syncSuggestions();
+    }
+
+    function addIngredient(raw) {
+      String(raw).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean).forEach((v) => {
+        if (!ingredients.includes(v)) ingredients.push(v);
+      });
+      input.value = "";
+      renderChips();
+    }
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (input.value.trim()) addIngredient(input.value);
+        else searchRecipes();
+      } else if (e.key === "," ) {
+        e.preventDefault(); addIngredient(input.value);
+      } else if (e.key === "Backspace" && !input.value && ingredients.length) {
+        ingredients.pop(); renderChips();
+      }
+    });
+    field.addEventListener("click", () => input.focus());
+    input.addEventListener("focus", () => field.classList.add("focus"));
+    input.addEventListener("blur", () => field.classList.remove("focus"));
+
+    /* ----------  SUGGESTIONS  ---------- */
+    function buildSuggestions() {
+      const row = $("suggestRow");
+      row.innerHTML = "";
+      SUGGESTIONS.forEach((s) => {
+        const b = document.createElement("button");
+        b.className = "sg"; b.type = "button"; b.dataset.ing = s; b.textContent = "+ " + s;
+        b.addEventListener("click", () => { addIngredient(s); input.focus(); });
+        row.appendChild(b);
+      });
+    }
+    function syncSuggestions() {
+      document.querySelectorAll(".sg").forEach((b) => { b.disabled = ingredients.includes(b.dataset.ing); });
+    }
+
+    /* ----------  BUTTONS  ---------- */
+    $("searchBtn").addEventListener("click", () => {
+      if (input.value.trim()) addIngredient(input.value);
+      searchRecipes();
+    });
+    $("clearBtn").addEventListener("click", () => {
+      ingredients = []; input.value = ""; renderChips();
+      view = "search"; head.style.display = "none"; grid.innerHTML = ""; renderIdle(); input.focus();
+    });
+    favBtn.addEventListener("click", () => { view = "favorites"; renderFavorites(); window.scrollTo({ top: head.offsetTop - 90, behavior: "smooth" }); });
+
+    /* ----------  SEARCH  ---------- */
+    async function searchRecipes() {
+      view = "search";
+      if (!ingredients.length) {
+        field.classList.add("focus");
+        setTimeout(() => field.classList.remove("focus"), 900);
+        renderState("🧺", "Add an ingredient first", "Tell FlavorFind what's in your kitchen — even one item works.");
+        showHead("Let's get cooking", "");
+        return;
+      }
+
+      showHead("Simmering ideas…", "Searching for the perfect match");
+      renderSkeletons();
+
+      try {
+        const q = encodeURIComponent(ingredients.join(","));
+        const res = await fetch(`/api/recipes/search?ingredients=${q}`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const recipes = await res.json();
+
+        if (!Array.isArray(recipes) || recipes.length === 0) {
+          renderState("🍂", "No recipes found", "Try a different combination — or add a couple more pantry staples.");
+          showHead("Nothing matched", "0 recipes");
+          return;
+        }
+        renderCards(recipes);
+        showHead(`Recipes with <span>${escapeHtml(ingredients.join(", "))}</span>`, recipes.length + (recipes.length === 1 ? " match" : " matches"));
+      } catch (err) {
+        renderState("📡", "Couldn't reach the kitchen", "The server didn't respond. Make sure the app is running, then try again.");
+        showHead("Connection error", "");
+      }
+    }
+
+    /* ----------  RENDERERS  ---------- */
+    function showHead(title, meta) {
+      head.style.display = "flex";
+      headTitle.innerHTML = title;
+      headMeta.textContent = meta;
+    }
+
+    function recipeUrl(r) {
+      const slug = String(r.title || "recipe").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      return r.id ? `https://spoonacular.com/recipes/${slug}-${r.id}` : `https://www.google.com/search?q=${encodeURIComponent((r.title||"") + " recipe")}`;
+    }
+
+    function cardMarkup(r, i) {
+      const fav = isFav(r.id);
+      const img = r.image || `https://placehold.co/600x400?text=${encodeURIComponent(r.title||"Recipe")}`;
+      return `
+      <article class="card glass lume" style="animation-delay:${i * 70}ms">
+        <div class="media">
+          <span class="badge">🍽️ Recipe</span>
+          <button class="heart ${fav ? "on" : ""}" type="button" data-id="${r.id}" aria-label="Save recipe">${fav ? "♥" : "♡"}</button>
+          <img src="${escapeAttr(img)}" alt="${escapeAttr(r.title||"Recipe")}" loading="lazy"
+               onerror="this.onerror=null;this.src='https://placehold.co/600x400?text=No+Image'">
+        </div>
+        <div class="body">
+          <h3 class="title">${escapeHtml(r.title || "Untitled recipe")}</h3>
+          <div class="actions">
+            <a class="view" href="${escapeAttr(recipeUrl(r))}" target="_blank" rel="noopener">View recipe <span aria-hidden="true">→</span></a>
+            <button class="web" type="button" title="Search the web" data-q="${escapeAttr((r.title||"")+" recipe")}" aria-label="Search the web">🔎</button>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    function wireCards() {
+      grid.querySelectorAll(".heart").forEach((b) => {
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = parseInt(b.dataset.id, 10);
+          const card = b.closest(".card");
+          const title = card.querySelector(".title").textContent;
+          const img = card.querySelector("img").getAttribute("src");
+          toggleFav({ id, title, image: img });
+          const on = isFav(id);
+          b.classList.toggle("on", on);
+          b.textContent = on ? "♥" : "♡";
+          b.classList.remove("pop"); void b.offsetWidth; if (on) b.classList.add("pop");
+          if (view === "favorites" && !on) { card.style.transition = "opacity .3s, transform .3s"; card.style.opacity = "0"; card.style.transform = "scale(.9)"; setTimeout(renderFavorites, 280); }
+        });
+      });
+      grid.querySelectorAll(".web").forEach((b) => {
+        b.addEventListener("click", () => window.open("https://www.google.com/search?q=" + encodeURIComponent(b.dataset.q), "_blank", "noopener"));
+      });
+      document.querySelectorAll(".card.lume").forEach((el) => {
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          el.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100) + "%");
+          el.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100) + "%");
+        });
+      });
+    }
+
+    function renderCards(recipes) {
+      grid.innerHTML = recipes.map(cardMarkup).join("");
+      wireCards();
+    }
+
+    function renderSkeletons(n = 6) {
+      grid.innerHTML = Array.from({ length: n }, () => `
+        <div class="skel glass">
+          <div class="media shimmer"></div>
+          <div class="ln shimmer"></div><div class="ln s shimmer"></div>
+          <div class="btn shimmer"></div>
+        </div>`).join("");
+    }
+
+    function renderState(emoji, title, text) {
+      grid.innerHTML = `<div class="state glass lume">
+        <span class="emoji">${emoji}</span>
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(text)}</p>
+      </div>`;
+      document.querySelectorAll(".state.lume").forEach((el) => {
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          el.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100) + "%");
+          el.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100) + "%");
+        });
+      });
+    }
+
+    function renderIdle() {
+      renderState("👩‍🍳", "Your kitchen, reimagined", "Add a few ingredients above and hit Find Dinner. We'll handle the inspiration.");
+    }
+
+    /* ----------  FAVORITES  ---------- */
+    function loadFavs() { try { return JSON.parse(localStorage.getItem("flavorfind:favs") || "[]"); } catch { return []; } }
+    function saveFavs() { localStorage.setItem("flavorfind:favs", JSON.stringify(favorites)); updateFavCount(); }
+    function isFav(id) { return favorites.some((f) => f.id === id); }
+    function toggleFav(r) {
+      if (isFav(r.id)) favorites = favorites.filter((f) => f.id !== r.id);
+      else favorites.unshift(r);
+      saveFavs();
+    }
+    function updateFavCount() { favCountEl.textContent = favorites.length; }
+
+    function renderFavorites() {
+      updateFavCount();
+      if (!favorites.length) {
+        renderState("🤍", "No saved recipes yet", "Tap the heart on any recipe to keep it here for later.");
+        showHead("Saved recipes", "0 saved");
+        return;
+      }
+      grid.innerHTML = favorites.map(cardMarkup).join("");
+      wireCards();
+      showHead("Saved recipes", favorites.length + (favorites.length === 1 ? " saved" : " saved"));
+    }
+
+    /* ----------  HELPERS  ---------- */
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c])); }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    /* ----------  BOOT  ---------- */
+    buildSuggestions();
+    renderChips();
+    updateFavCount();
+    renderIdle();
+    input.focus();
+  </script>
+</body>
+</html>
